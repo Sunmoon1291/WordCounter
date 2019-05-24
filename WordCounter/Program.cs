@@ -30,16 +30,16 @@ namespace WordCounter
             string filename;
             DateTime bg = DateTime.Now;
 
-            Console.CursorVisible = false; //Отключение отображения курсора в консоли
-            repos = new TaskRepos(); //Инициализация репозитория
-            repos.OnChange += PrintProgress; //Добавление обработчика события при добавлении файла или изменении информации о прогрессе
+            Console.CursorVisible = false;
+            repos = new TaskRepos();
+            repos.OnChange += PrintProgress; // PrintProgress запускается при добавления файла в репозиторий и при изменении прогресса
 
             var tl = new List<Task>(); //Список со всеми задачами. Для каждого файла своя задача
 
             while (!objFiles.EndOfStream)
             {
                 filename = objFiles.ReadLine();
-                if (filename != null && filename != "" && repos.IsNotInTasks(filename)) //для каждого не пустого имени файла, которого нет в репозитории
+                if (filename != null && filename != "" && repos.IsNotInTasks(filename))
                 {
                     tl.Add(FileProcessingAsync(filename)); //добавление файла в репозиторий
                 }
@@ -49,17 +49,17 @@ namespace WordCounter
 
             Task.WaitAll(tl.ToArray()); //Ожидание пока не законатся все задачи по обработке файлов
 
-            var duration = (DateTime.Now - bg).TotalMilliseconds; //Определение продолжительности выполнения
-            Console.SetCursorPosition(0, repos.Tasks.AsEnumerable().Max(p => p.rownum) + 1); //Переход на новую строку
+            var duration = (DateTime.Now - bg).TotalMilliseconds;
+            Console.SetCursorPosition(0, repos.Tasks.AsEnumerable().Max(p => p.rownum) + 1); //Переход на новую строку в консоли
             Console.WriteLine($"Время выполнения: {duration}");
             Console.ReadKey();
         }
 
         public static async Task FileProcessingAsync(string filename)
         {
-            lock (lockerAdd) //Если ни одна задача не добавляет файл, то добавить. Иначе ожидать пока другая задача не закончит
+            lock (lockerAdd)
                 repos.AddTask(filename, 0, 0, Console.CursorTop); //в последнем параметре передается номер строки в консоле, в которой будет отображаться прогресс по файлу
-            await CountWords(filename); //Запуск подсчета слов
+            await CountWords(filename);
         }
 
         public static Task CountWords(string filename)
@@ -69,12 +69,12 @@ namespace WordCounter
                 StreamReader objReader = new StreamReader(filename); //Открытие файла
                 int count = 0;
                 Regex regexp = new Regex(@"\w+\-*\w*"); //Регулярное выражение для определения слова с учетом составных слов типа "социально-экономический"
-                int rows_count = File.ReadAllLines(filename).Length; //Подсчет общего количества строк
+                int rows_count = File.ReadAllLines(filename).Length;
                 var i = 1;
                 while (!objReader.EndOfStream)
                 {
-                    count += regexp.Matches(objReader.ReadLine()).Count; //добавление подсчитанных слов в строке
-                    lock (lockerEdit) //если другие задачи не изменяют инф-цию о прогрессе, то изменить. Иначе ждать пока другая задача не закончит
+                    count += regexp.Matches(objReader.ReadLine()).Count;
+                    lock (lockerEdit)
                         repos.EditProgress(filename, i++ * 50 / rows_count, count); //прогресс определяется как отношения кол-ва обработанных строк к общему кол-ву строк
                 }
             });
@@ -82,12 +82,12 @@ namespace WordCounter
 
         public static void PrintProgress(string filename)
         {
-            lock (lockerPrint) //если другие потоки не выполняют вывод в консоль
+            lock (lockerPrint)
             {
-                var ft = repos.Tasks.Find(p => p.filename == filename); //поиск нужного файла в репозитории по имени
-                var pr = ft.progress; //прогресс
-                Console.SetCursorPosition(0, ft.rownum); //переход в консоли на строку соответствующую файлу
-                //вывод информации о прогрессе по одному файлу, имя которого берется из параметра filename
+                var ft = repos.Tasks.Find(p => p.filename == filename);
+                var pr = ft.progress;
+                //вывод информации о прогрессе по одному файлу. Для каждого файла своя строчка в консоли, которая не меняется. Новая информация перезаписывает старую
+                Console.SetCursorPosition(0, ft.rownum);
                 Console.WriteLine($"Файл: {ft.filename} [{new string('*', pr) + new string('_', 50 - pr)}] {2*pr}% Слов: {ft.words}");
             }
         }
