@@ -9,7 +9,7 @@ namespace WordCounter
 {
     class Program
     {
-        static TaskRepos repos; //Репозитарий с информацие о состоянии подсчета слов в файлах      
+        static TaskRepos repos; //Репозиторий с информацией о состоянии подсчета слов в файлах      
         static object lockerPrint = new object(); //Объект блокировки вывода в консоль
         static object lockerAdd = new object(); //Объект блокировки добавления файла       
         static object lockerEdit = new object(); //Объект блокировки изменении информации о прогрессе
@@ -31,7 +31,7 @@ namespace WordCounter
             DateTime bg = DateTime.Now;
 
             Console.CursorVisible = false; //Отключение отображения курсора в консоли
-            repos = new TaskRepos(); //Инициализация репозитария
+            repos = new TaskRepos(); //Инициализация репозитория
             repos.OnChange += PrintProgress; //Добавление обработчика события при добавлении файла или изменении информации о прогрессе
 
             var tl = new List<Task>(); //Список со всеми задачами. Для каждого файла своя задача
@@ -39,7 +39,7 @@ namespace WordCounter
             while (!objFiles.EndOfStream)
             {
                 filename = objFiles.ReadLine();
-                if (filename != null && filename != "" && repos.IsNotInTasks(filename)) //для каждого не пустого имени файла, которого нет в репозитарии
+                if (filename != null && filename != "" && repos.IsNotInTasks(filename)) //для каждого не пустого имени файла, которого нет в репозитории
                 {
                     tl.Add(FileProcessingAsync(filename)); //добавление файла в репозиторий
                 }
